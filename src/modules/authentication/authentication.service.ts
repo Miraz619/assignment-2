@@ -1,7 +1,9 @@
+
+import { config } from "../../config";
 import { pool } from "../../db";
 import type { Ilogin, Iuser } from "./authetication.interface"
 import bcrypt from "bcrypt";
-
+import jwt from "jsonwebtoken";
  
 
 
@@ -45,18 +47,38 @@ const loginUserIntoDB=async(payload: Ilogin )=>{
     
 
      if (userInfo.rows.length===0){
-        throw new Error("Invalid email");
+        throw new Error("Invalid email or password");
      }
 
      const user=userInfo.rows[0]
      const matchPassword= await bcrypt.compare(password,userInfo.rows[0].password);
      
      if(!matchPassword){
-        throw new Error("Inavalid password");
+        throw new Error("Inavalid email or password");
      }
 
+
+     const jwtpayload={
+        id:user.id,
+        name:user.name,
+        role:user.role
+     }
+
+  
+     const accessToken=jwt.sign(
+        jwtpayload,
+        config.jwt_secret as string,
+         {
+        expiresIn: "7d"}
+
+         )
+
+  const userWithToken={
+    token: accessToken,
+    user,
+  }
      
-     
+  return userWithToken;
      
 }
 

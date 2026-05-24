@@ -42,15 +42,23 @@ try {
 const loginUser=async(req:Request, res: Response)=>{
   try {
     const result= await autheticationService.loginUserIntoDB(req.body);
+    
+    sendResponse(res,{
+        statusCode: 200,
+        success:true,
+        message: "Login successful",
+        data: result
+    })
+
   } 
   catch (error:unknown) {
     
     const errorMessage= error instanceof Error? error.message : "something went wrong";
-   
+    
     sendResponse(res,{
-        statusCode: 500,
+        statusCode: 401,
         success:false,
-        message: "Internal Server Error",
+        message: "Inavalid email or password",
         error: errorMessage
         
     })
