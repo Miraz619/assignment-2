@@ -42,11 +42,20 @@ try {
 const loginUser=async(req:Request, res: Response)=>{
   try {
     const result= await autheticationService.loginUserIntoDB(req.body);
-  } catch (error) {
+  } 
+  catch (error:unknown) {
     
-  }
-    
+    const errorMessage= error instanceof Error? error.message : "something went wrong";
+   
+    sendResponse(res,{
+        statusCode: 500,
+        success:false,
+        message: "Internal Server Error",
+        error: errorMessage
+        
+    })
 
+}
 }
 
 

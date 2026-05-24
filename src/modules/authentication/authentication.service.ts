@@ -11,7 +11,11 @@ const createUserIntoDB=async(payload:Iuser)=>{
 
     const hashPassword = await bcrypt.hash(password, 11);
 
-    
+    const validRole=['contributor', 'maintainer'];
+
+    if(role && !validRole.includes(role as string)){
+          throw new Error('Invalid role');
+    }
     
     const result= await pool.query(
         `
@@ -32,8 +36,27 @@ const createUserIntoDB=async(payload:Iuser)=>{
 const loginUserIntoDB=async(payload: Ilogin )=>{
      
     const {email,password}=payload;
+    
+    const userInfo=await pool.query(`
+        
+        SELECT * FROM users WHERE email=$1
+        
+        `,[email]);
+    
 
+     if (userInfo.rows.length===0){
+        throw new Error("Invalid email");
+     }
 
+     const user=userInfo.rows[0]
+     const matchPassword= await bcrypt.compare(password,userInfo.rows[0].password);
+     
+     if(!matchPassword){
+        throw new Error("Inavalid password");
+     }
+
+     
+     
      
 }
 
