@@ -24,10 +24,16 @@ try {
     
     const errorMessage= error instanceof Error? error.message : "something went wrong";
    
+    let statusCode=500;
+    let message="Internal Server Error";
+    if(errorMessage==="Invalid role"){
+        statusCode=400;
+        message="Invalid role";
+    }
     sendResponse(res,{
-        statusCode: 500,
+        statusCode,
         success:false,
-        message: "Internal Server Error",
+        message,
         error: errorMessage
         
     })
