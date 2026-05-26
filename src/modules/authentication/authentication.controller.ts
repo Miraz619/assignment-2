@@ -30,6 +30,17 @@ try {
         statusCode=400;
         message="Invalid role";
     }
+
+    else if(errorMessage.includes("unique constraint") || errorMessage.includes("duplicate key value")){
+
+        statusCode=409;
+        message="Email already exists";
+    }
+   else if(errorMessage.includes("null value in column") || errorMessage.includes("violates not-null constraint")){
+
+        statusCode=400;
+        message="Missing required fields";
+    }
     sendResponse(res,{
         statusCode,
         success:false,
@@ -61,10 +72,22 @@ const loginUser=async(req:Request, res: Response)=>{
     
     const errorMessage= error instanceof Error? error.message : "something went wrong";
     
+    let statusCode=500;
+    let message="Internal Server Error";
+    if(errorMessage==='Email and paasword are required'){
+        statusCode=400;
+        message='Email and paasword are required';
+    }
+
+    else if (errorMessage==='Invalid email or password'){
+        statusCode=401;
+        message='Invalid email or password';
+    }
+    
     sendResponse(res,{
-        statusCode: 401,
+        statusCode,
         success:false,
-        message: "Inavalid email or password",
+        message,
         error: errorMessage
         
     })

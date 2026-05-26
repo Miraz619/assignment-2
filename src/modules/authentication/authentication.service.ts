@@ -38,6 +38,10 @@ const createUserIntoDB=async(payload:Iuser)=>{
 const loginUserIntoDB=async(payload: Ilogin )=>{
      
     const {email,password}=payload;
+
+    if(!email || !password){
+      throw new Error('Email and paasword are required');
+    }
     
     const userInfo=await pool.query(`
         
@@ -49,7 +53,7 @@ const loginUserIntoDB=async(payload: Ilogin )=>{
      if (userInfo.rows.length===0){
         throw new Error("Invalid email or password");
      }
-
+     
      const user=userInfo.rows[0]
      const matchPassword= await bcrypt.compare(password,userInfo.rows[0].password);
      
