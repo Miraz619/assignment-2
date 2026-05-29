@@ -4,10 +4,10 @@ import type { Iissue } from "./issue.interface";
 
 
 
-const createIssueIntoDB=async (playload:Iissue)=>{
+const createIssueIntoDB=async (playload:Iissue,id:string)=>{
 
 
-     const {title,description, type, status, reporter_id}=playload;
+     const {title,description, type, status}=playload;
 
      const types=['bug', 'feature_request'];
      const statuse_types=['open', 'in_progress', 'resolved'];
@@ -30,7 +30,7 @@ const createIssueIntoDB=async (playload:Iissue)=>{
              INSERT INTO issues (title,description, type, status, reporter_id) VALUES ($1,$2,$3,COALESCE($4,'open'),$5)
              RETURNING *
              `,
-             [title,description, type, status, reporter_id]
+             [title,description, type, status, id]
          );
 
      return result.rows[0];

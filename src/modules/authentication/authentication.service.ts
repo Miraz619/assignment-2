@@ -65,6 +65,7 @@ const loginUserIntoDB=async(payload: Ilogin )=>{
      const jwtpayload={
         id:user.id,
         name:user.name,
+        email:user.email,
         role:user.role
      }
 
