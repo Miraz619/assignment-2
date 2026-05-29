@@ -6,3 +6,10 @@ export interface Iissue{
     status?:string;
     reporter_id?:number;
 }
+
+
+export interface Ifilter{
+    sort?:string;
+    type?:string;
+    status?:string;
+}

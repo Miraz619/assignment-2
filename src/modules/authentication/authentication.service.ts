@@ -77,6 +77,7 @@ const loginUserIntoDB=async(payload: Ilogin )=>{
         expiresIn: "7d"}
 
          )
+       delete user.password;
 
   const userWithToken={
     token: accessToken,

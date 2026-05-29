@@ -1,5 +1,5 @@
 import { pool } from "../../db";
-import type { Iissue } from "./issue.interface";
+import type { Ifilter, Iissue } from "./issue.interface";
 
 
 
@@ -38,9 +38,97 @@ const createIssueIntoDB=async (playload:Iissue,id:string)=>{
 
 }
 
+const getIssueFromDB=async(playload:Ifilter)=>{
 
+    const {sort="newest",type,status}=playload;
+
+    const validSort=['newest','oldest'];
+
+   const validType=['bug','feature_request'];
+   const validStaus=['open','in_progress','resolved'];
+
+
+   if(sort && !validSort.includes(sort)){
+      throw new Error('invalid sort');
+   }
+  else  if(type && !validType.includes(type)){
+      throw new Error('invalid type');
+   }
+
+   else  if(status && !validStaus.includes(status)){
+      throw new Error('Invalid status');
+   }
+
+
+  
+
+    let query=`SELECT * FROM issues`;
+
+    const values: string[]=[];
+    const condi : string[]=[];
+
+    if(type){
+      values.push(type);
+      condi.push(`type = $${values.length}`);
+
+    }
+    if(status){
+      values.push(status);
+      condi.push(`status = $${values.length}`);
+
+    }
+
+    if(condi.length>0){
+      query+=` WHERE ${condi.join(' AND ')}`;
+    }
+
+    if(sort==='newest'){
+
+      query+= ` ORDER BY created_at DESC`;
+    }
+    else{
+      query+=  ` ORDER BY created_at ASC`;
+    }
+   const result= await pool.query(
+      
+      query,values
+   );
+
+   
+  
+
+   const issuesResult=result.rows;
+
+   const finalResult=[];
+
+   for(const issue of issuesResult){
+
+      const reporter=await pool.query(
+         `SELECT id,name,role FROM users WHERE id=$1`,
+         [issue.reporter_id]
+      )
+
+       finalResult.push({
+      id:issue.id,
+      title:issue.title,
+      description:issue.description,
+      type:issue.type,
+      status:issue.staus,
+      reporter:reporter.rows[0],
+      created_at: issue.created_at,
+     updated_at: issue.updated_at
+      
+   })
+   }
+   
+  
+   return finalResult;
+
+
+}
 
 
 export const issueService={
     createIssueIntoDB,
+    getIssueFromDB,
 }
