@@ -13,3 +13,9 @@ export interface Ifilter{
     type?:string;
     status?:string;
 }
+
+export interface Iupdate{
+   title?:string;
+   description?:string;
+   type?:string;
+}

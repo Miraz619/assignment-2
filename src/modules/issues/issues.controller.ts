@@ -32,11 +32,10 @@ const createIssue = async (req: Request, res: Response) => {
     ) {
       statusCode = 400;
       message = "status must be open or in_progress or resolved";
+    } else if (errorMessage.includes("violates check constraint")) {
+      statusCode = 400;
+      message = "Invalid input";
     }
-    else if (errorMessage.includes("violates check constraint")) {
-  statusCode = 400;
-  message = "Invalid input";
-}
 
     sendResponse(res, {
       statusCode,
@@ -53,7 +52,7 @@ const getAllIssue = async (req: Request, res: Response) => {
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Issue created successfully",
+      message: "Issue retrived successfully",
       data: issues,
     });
   } catch (error: unknown) {
@@ -81,7 +80,88 @@ const getAllIssue = async (req: Request, res: Response) => {
   }
 };
 
+const singleIssue = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await issueService.singleIssueFromDB(id as string);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue retrived successfully",
+      data: result,
+    });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "something went wrong";
+
+    let statusCode = 500;
+    let message = "Internal Server Error";
+
+    if (errorMessage === "Issue not found") {
+      statusCode = 404;
+      message = "Issue not found";
+    }
+    sendResponse(res, {
+      statusCode,
+      success: false,
+      message,
+      error: errorMessage,
+    });
+  }
+};
+
+const updateIssue = async (req: Request, res: Response) => {
+  try {
+    const { role, UserId } = req.user as JwtPayload;
+    const { id } = req.params;
+
+    const result = await issueService.updateIssueInDB(
+      req.body,
+      role,
+      id as string,
+      UserId,
+    );
+   
+     sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue updated successfully",
+      data: result,
+    });
+
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "something went wrong";
+
+    let statusCode = 500;
+    let message = "Internal Server Error";
+
+    if (errorMessage === "Issue not found") {
+      statusCode = 404;
+      message = "Issue not found";
+    } else if (errorMessage === "Forbidden") {
+      statusCode = 403;
+      message = "Forbidden from controller";
+    } else if (errorMessage === "No update data provided") {
+      statusCode = 400;
+      message = "No update data provided";
+    } else if (errorMessage === "Invalid type") {
+      statusCode = 400;
+      message = "Invalid type";
+    }
+
+    sendResponse(res, {
+      statusCode,
+      success: false,
+      message,
+      error: errorMessage,
+    });
+  }
+};
 export const issueController = {
   createIssue,
   getAllIssue,
+  singleIssue,
+  updateIssue,
 };

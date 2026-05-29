@@ -1,134 +1,190 @@
 import { pool } from "../../db";
-import type { Ifilter, Iissue } from "./issue.interface";
+import type { Ifilter, Iissue, Iupdate } from "./issue.interface";
 
+const createIssueIntoDB = async (payload: Iissue, id: string) => {
+  const { title, description, type, status } = payload;
 
+  const types = ["bug", "feature_request"];
+  const statuse_types = ["open", "in_progress", "resolved"];
 
+  if (!type || !title || !description) {
+    throw new Error("type,title, description must required");
+  } else if (type && !types.includes(type)) {
+    throw new Error("type must be bug or feature_request");
+  } else if (status && !statuse_types.includes(status)) {
+    throw new Error("status must be open or in_progress or resolved");
+  }
 
-const createIssueIntoDB=async (playload:Iissue,id:string)=>{
-
-
-     const {title,description, type, status}=playload;
-
-     const types=['bug', 'feature_request'];
-     const statuse_types=['open', 'in_progress', 'resolved'];
-
-     if(!type || !title || !description){
-        throw new Error('type,title, description must required');
-     }
-     else if(type && !types.includes(type)){
-        
-        throw new Error('type must be bug or feature_request');
-
-     }
-
-     else if(status && !statuse_types.includes(status)){
-        throw new Error('status must be open or in_progress or resolved');
-     }
-
-      const result= await pool.query(
-             `
+  const result = await pool.query(
+    `
              INSERT INTO issues (title,description, type, status, reporter_id) VALUES ($1,$2,$3,COALESCE($4,'open'),$5)
              RETURNING *
              `,
-             [title,description, type, status, id]
-         );
+    [title, description, type, status, id],
+  );
 
-     return result.rows[0];
+  return result.rows[0];
+};
 
+const getIssueFromDB = async (payload: Ifilter) => {
+  const { sort = "newest", type, status } = payload;
 
-}
+  const validSort = ["newest", "oldest"];
 
-const getIssueFromDB=async(playload:Ifilter)=>{
+  const validType = ["bug", "feature_request"];
+  const validStaus = ["open", "in_progress", "resolved"];
 
-    const {sort="newest",type,status}=playload;
+  if (sort && !validSort.includes(sort)) {
+    throw new Error("invalid sort");
+  } else if (type && !validType.includes(type)) {
+    throw new Error("invalid type");
+  } else if (status && !validStaus.includes(status)) {
+    throw new Error("Invalid status");
+  }
 
-    const validSort=['newest','oldest'];
+  let query = `SELECT * FROM issues`;
 
-   const validType=['bug','feature_request'];
-   const validStaus=['open','in_progress','resolved'];
+  const values: string[] = [];
+  const condi: string[] = [];
 
+  if (type) {
+    values.push(type);
+    condi.push(`type = $${values.length}`);
+  }
+  if (status) {
+    values.push(status);
+    condi.push(`status = $${values.length}`);
+  }
 
-   if(sort && !validSort.includes(sort)){
-      throw new Error('invalid sort');
-   }
-  else  if(type && !validType.includes(type)){
-      throw new Error('invalid type');
-   }
+  if (condi.length > 0) {
+    query += ` WHERE ${condi.join(" AND ")}`;
+  }
 
-   else  if(status && !validStaus.includes(status)){
-      throw new Error('Invalid status');
-   }
+  if (sort === "newest") {
+    query += ` ORDER BY created_at DESC`;
+  } else {
+    query += ` ORDER BY created_at ASC`;
+  }
+  const result = await pool.query(query, values);
 
+  const issuesResult = result.rows;
 
-  
+  const finalResult = [];
 
-    let query=`SELECT * FROM issues`;
+  for (const issue of issuesResult) {
+    const reporter = await pool.query(
+      `SELECT id,name,role FROM users WHERE id=$1`,
+      [issue.reporter_id],
+    );
 
-    const values: string[]=[];
-    const condi : string[]=[];
-
-    if(type){
-      values.push(type);
-      condi.push(`type = $${values.length}`);
-
-    }
-    if(status){
-      values.push(status);
-      condi.push(`status = $${values.length}`);
-
-    }
-
-    if(condi.length>0){
-      query+=` WHERE ${condi.join(' AND ')}`;
-    }
-
-    if(sort==='newest'){
-
-      query+= ` ORDER BY created_at DESC`;
-    }
-    else{
-      query+=  ` ORDER BY created_at ASC`;
-    }
-   const result= await pool.query(
-      
-      query,values
-   );
-
-   
-  
-
-   const issuesResult=result.rows;
-
-   const finalResult=[];
-
-   for(const issue of issuesResult){
-
-      const reporter=await pool.query(
-         `SELECT id,name,role FROM users WHERE id=$1`,
-         [issue.reporter_id]
-      )
-
-       finalResult.push({
-      id:issue.id,
-      title:issue.title,
-      description:issue.description,
-      type:issue.type,
-      status:issue.staus,
-      reporter:reporter.rows[0],
+    finalResult.push({
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      type: issue.type,
+      status: issue.status,
+      reporter: reporter.rows[0],
       created_at: issue.created_at,
-     updated_at: issue.updated_at
+      updated_at: issue.updated_at,
+    });
+  }
+
+  return finalResult;
+};
+
+const singleIssueFromDB = async (id: string) => {
+  const result = await pool.query(
+    `
       
-   })
-   }
-   
-  
-   return finalResult;
+      SELECT * FROM issues WHERE id=$1
+      
+       `,
+    [id],
+  );
 
+  const issue = result.rows[0];
+  if (!issue) {
+    throw new Error("Issue not found");
+  }
+  const reporter = await pool.query(
+    `SELECT id,name,role FROM users WHERE id=$1`,
+    [issue.reporter_id],
+  );
 
-}
+  const finalResult = {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter: reporter.rows[0],
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
 
+  return finalResult;
+};
 
-export const issueService={
-    createIssueIntoDB,
-    getIssueFromDB,
-}
+const updateIssueInDB = async (
+  payload: Iupdate,
+  role: string,
+  Issueid: string,
+  UserId: string,
+) => {
+  const result = await pool.query(
+    `
+         
+         SELECT * FROM issues WHERE id=$1
+         
+         `,
+    [Issueid],
+  );
+
+  const issue = result.rows[0];
+  if (!issue) {
+    throw new Error("Issue not found");
+  }
+
+  const isContributorAllowed =
+    role === "contributor" &&
+    issue.reporter_id === Number(UserId) &&
+    issue.status === "open";
+
+  if (!isContributorAllowed && role!=='maintainer') {
+    throw new Error("Forbidden");
+  }
+
+  const { title, description, type } = payload;
+
+  if (!title && !description && !type) {
+    throw new Error("No update data provided");
+  }
+
+  if (type && type !== "bug" && type !== "feature_request") {
+    throw new Error("Invalid type");
+  }
+
+  const updateResult = await pool.query(
+    `
+  UPDATE issues
+  SET
+  title = COALESCE($1, 
+  title),
+  description = COALESCE($2, description),
+ type = COALESCE($3, type),
+   updated_at = NOW()
+  WHERE id = $4
+  RETURNING *
+  `,
+    [title, description, type, Issueid],
+  );
+
+  return updateResult.rows[0];
+};
+
+export const issueService = {
+  createIssueIntoDB,
+  getIssueFromDB,
+  singleIssueFromDB,
+  updateIssueInDB,
+};
