@@ -181,7 +181,7 @@ const updateIssueInDB = async (
   title),
   description = COALESCE($2, description),
  type = COALESCE($3, type),
- status= COALESCE($4, status),
+ status= COALESCE($4, 'in_progress'),
    updated_at = NOW()
   WHERE id = $5
   RETURNING *
