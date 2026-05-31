@@ -1,16 +1,9 @@
 import type { Response } from "express";
+import type { TResponse } from "../types";
 
 
 
 
-type TResponse<T,U>={
-
- statusCode:number;
- success: boolean;
- message: string;
- data?: T;
- errors?: U;
-}
 
 
 

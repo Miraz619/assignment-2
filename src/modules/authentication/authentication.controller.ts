@@ -33,8 +33,8 @@ try {
 
     else if(errorMessage.includes("unique constraint") || errorMessage.includes("duplicate key value")){
 
-        statusCode=409;
-        message="Email already exists";
+        statusCode=400;
+        message="Email already exist";
     }
    else if(errorMessage.includes("null value in column") || errorMessage.includes("violates not-null constraint")){
 
@@ -45,7 +45,7 @@ try {
         statusCode,
         success:false,
         message,
-        error: errorMessage
+        errors: errorMessage
         
     })
 
@@ -88,7 +88,7 @@ const loginUser=async(req:Request, res: Response)=>{
         statusCode,
         success:false,
         message,
-        error: errorMessage
+        errors: errorMessage
         
     })
 

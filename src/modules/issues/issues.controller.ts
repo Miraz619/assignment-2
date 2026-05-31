@@ -84,7 +84,7 @@ const singleIssue = async (req: Request, res: Response) => {
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Issue retrived successfully",
+      message: "Issues retrived successfully",
       data: result,
     });
   } catch (error: unknown) {
@@ -176,7 +176,7 @@ const deleteIssue = async (req: Request, res: Response) => {
     let message = "Internal Server Error";
 
     if (errorMessage === "issue not found") {
-      statusCode = 403;
+      statusCode = 404;
       message = "issue not found";
     }
      sendResponse(res, {

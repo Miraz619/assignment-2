@@ -8,3 +8,13 @@ export const USER_ROLE={
     maintainer:'maintainer'
 
 }as const
+
+
+export type TResponse<T,U>={
+
+ statusCode:number;
+ success: boolean;
+ message: string;
+ data?: T;
+ errors?: U;
+}
