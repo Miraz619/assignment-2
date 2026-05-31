@@ -68,16 +68,14 @@ npm run dev
 ### Authentication
 
 | Method | Endpoint | Access |  
-
 |---|---|---|
-
 | POST | `/api/auth/signup` | Public |
 | POST | `/api/auth/login` | Public |
 
 ### Issues
 
 | Method | Endpoint | Access |
-|---|---|---|---|
+|---|---|---|
 | POST | `/api/issues` | Authenticated |
 | GET | `/api/issues` | Public |
 | GET | `/api/issues/:id` |Public|
