@@ -64,8 +64,8 @@ const auth =(...roles:ROLES[])=>{
     const errorMessage =
       error instanceof Error ? error.message : "something went wrong";
 
-    let statusCode = 500;
-    let message = "Internal Server Error";
+    let statusCode = 401;
+    let message = "Unauthorized";
     if (errorMessage === "Token is not provided") {
       statusCode = 401;
       message = "Token is not provided";
@@ -82,7 +82,7 @@ const auth =(...roles:ROLES[])=>{
       statusCode,
       success: false,
       message,
-      error: errorMessage,
+      errors: errorMessage,
     });
   }
 }

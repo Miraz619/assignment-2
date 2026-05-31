@@ -58,7 +58,7 @@ const loginUserIntoDB=async(payload: Ilogin )=>{
      const matchPassword= await bcrypt.compare(password,userInfo.rows[0].password);
      
      if(!matchPassword){
-        throw new Error("Inavalid email or password");
+        throw new Error("Invalid email or password");
      }
 
 

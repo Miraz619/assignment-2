@@ -1,7 +1,8 @@
-import type { Request, Response } from "express";
+import { response, type Request, type Response } from "express";
 import { issueService } from "./issues.service";
 import sendResponse from "../../utility/sendResponse";
 import type { JwtPayload } from "jsonwebtoken";
+
 
 const createIssue = async (req: Request, res: Response) => {
   try {
@@ -27,11 +28,6 @@ const createIssue = async (req: Request, res: Response) => {
     } else if (errorMessage === "type must be bug or feature_request") {
       statusCode = 400;
       message = "type must be bug or feature_request";
-    } else if (
-      errorMessage === "status must be open or in_progress or resolved"
-    ) {
-      statusCode = 400;
-      message = "status must be open or in_progress or resolved";
     } else if (errorMessage.includes("violates check constraint")) {
       statusCode = 400;
       message = "Invalid input";
@@ -41,7 +37,7 @@ const createIssue = async (req: Request, res: Response) => {
       statusCode,
       success: false,
       message,
-      error: errorMessage,
+      errors: errorMessage,
     });
   }
 };
@@ -75,7 +71,7 @@ const getAllIssue = async (req: Request, res: Response) => {
       statusCode,
       success: false,
       message,
-      error: errorMessage,
+      errors: errorMessage,
     });
   }
 };
@@ -106,14 +102,14 @@ const singleIssue = async (req: Request, res: Response) => {
       statusCode,
       success: false,
       message,
-      error: errorMessage,
+      errors: errorMessage,
     });
   }
 };
 
 const updateIssue = async (req: Request, res: Response) => {
   try {
-    const { role, UserId } = req.user as JwtPayload;
+    const { role, id: UserId } = req.user as JwtPayload;
     const { id } = req.params;
 
     const result = await issueService.updateIssueInDB(
@@ -122,14 +118,13 @@ const updateIssue = async (req: Request, res: Response) => {
       id as string,
       UserId,
     );
-   
-     sendResponse(res, {
+
+    sendResponse(res, {
       statusCode: 200,
       success: true,
       message: "Issue updated successfully",
       data: result,
     });
-
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : "something went wrong";
@@ -142,20 +137,53 @@ const updateIssue = async (req: Request, res: Response) => {
       message = "Issue not found";
     } else if (errorMessage === "Forbidden") {
       statusCode = 403;
-      message = "Forbidden from controller";
+      message = "Forbidden";
     } else if (errorMessage === "No update data provided") {
       statusCode = 400;
       message = "No update data provided";
     } else if (errorMessage === "Invalid type") {
       statusCode = 400;
       message = "Invalid type";
+    } else if (errorMessage === "Invalid status") {
+      statusCode = 400;
+      message = "Invalid status";
     }
-
     sendResponse(res, {
       statusCode,
       success: false,
       message,
-      error: errorMessage,
+      errors: errorMessage,
+    });
+  }
+};
+
+const deleteIssue = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await issueService.deleteIssueFromDB(id as string);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue deleted successfully",
+    });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "something went wrong";
+
+    let statusCode = 500;
+    let message = "Internal Server Error";
+
+    if (errorMessage === "issue not found") {
+      statusCode = 403;
+      message = "issue not found";
+    }
+     sendResponse(res, {
+      statusCode,
+      success: false,
+      message,
+      errors: errorMessage,
     });
   }
 };
@@ -164,4 +192,5 @@ export const issueController = {
   getAllIssue,
   singleIssue,
   updateIssue,
+  deleteIssue,
 };

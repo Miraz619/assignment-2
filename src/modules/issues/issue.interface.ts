@@ -3,8 +3,7 @@ export interface Iissue{
     title: string;
     description: string;
     type: string;
-    status?:string;
-    reporter_id?:number;
+    
 }
 
 
@@ -18,4 +17,5 @@ export interface Iupdate{
    title?:string;
    description?:string;
    type?:string;
+   status?:string;
 }

@@ -1,26 +1,24 @@
+import { error } from "node:console";
 import { pool } from "../../db";
 import type { Ifilter, Iissue, Iupdate } from "./issue.interface";
 
 const createIssueIntoDB = async (payload: Iissue, id: string) => {
-  const { title, description, type, status } = payload;
+  const { title, description, type } = payload;
 
   const types = ["bug", "feature_request"];
-  const statuse_types = ["open", "in_progress", "resolved"];
 
   if (!type || !title || !description) {
     throw new Error("type,title, description must required");
   } else if (type && !types.includes(type)) {
     throw new Error("type must be bug or feature_request");
-  } else if (status && !statuse_types.includes(status)) {
-    throw new Error("status must be open or in_progress or resolved");
   }
 
   const result = await pool.query(
     `
-             INSERT INTO issues (title,description, type, status, reporter_id) VALUES ($1,$2,$3,COALESCE($4,'open'),$5)
+             INSERT INTO issues (title,description, type, reporter_id) VALUES ($1,$2,$3,$4)
              RETURNING *
              `,
-    [title, description, type, status, id],
+    [title, description, type, id],
   );
 
   return result.rows[0];
@@ -150,20 +148,31 @@ const updateIssueInDB = async (
     issue.reporter_id === Number(UserId) &&
     issue.status === "open";
 
-  if (!isContributorAllowed && role!=='maintainer') {
+  if (!isContributorAllowed && role !== "maintainer") {
     throw new Error("Forbidden");
   }
 
-  const { title, description, type } = payload;
+  const { title, description, type, status } = payload;
 
-  if (!title && !description && !type) {
+  if (status && role === "contributor") {
+    throw new Error("Forbidden");                 //only mantainer can update status
+  }
+
+  if (!title && !description && !type && !status) {
     throw new Error("No update data provided");
   }
 
   if (type && type !== "bug" && type !== "feature_request") {
     throw new Error("Invalid type");
   }
-
+  if (
+    status &&
+    status !== "open" &&
+    status !== "in_progress" &&
+    status !== "resolved"
+  ) {
+    throw new Error("Invalid status");
+  }
   const updateResult = await pool.query(
     `
   UPDATE issues
@@ -172,19 +181,33 @@ const updateIssueInDB = async (
   title),
   description = COALESCE($2, description),
  type = COALESCE($3, type),
+ status= COALESCE($4, status),
    updated_at = NOW()
-  WHERE id = $4
+  WHERE id = $5
   RETURNING *
   `,
-    [title, description, type, Issueid],
+    [title, description, type, status, Issueid],
   );
 
   return updateResult.rows[0];
 };
+
+const deleteIssueFromDB=async(id:string)=>{
+    const result= await pool.query(
+       `
+       DELETE FROM issues WHERE id=$1
+       RETURNING *
+      `,[id]
+    )
+  if(result.rows.length===0){
+    throw new Error('issue not found')
+  }
+}
 
 export const issueService = {
   createIssueIntoDB,
   getIssueFromDB,
   singleIssueFromDB,
   updateIssueInDB,
+  deleteIssueFromDB,
 };
