@@ -82,3 +82,30 @@ npm run dev
 | PATCH | `/api/issues/:id` | Contributor/Maintainer |
 | DELETE | `/api/issues/:id` | Maintainer only |
 
+
+## Database Schema Summary
+
+### users table
+
+| Field | Type |
+|---|---|
+| id | SERIAL PRIMARY KEY |
+| name | VARCHAR(50) |
+| email | VARCHAR(100) UNIQUE |
+| password | TEXT |
+| role | VARCHAR(20) |
+| created_at | TIMESTAMP |
+| updated_at | TIMESTAMP |
+
+### issues table
+
+| Field | Type |
+|---|---|
+| id | SERIAL PRIMARY KEY |
+| title | VARCHAR(150) |
+| description | TEXT |
+| type | VARCHAR(20) |
+| status | VARCHAR(20) |
+| reporter_id | INT |
+| created_at | TIMESTAMP |
+| updated_at | TIMESTAMP |
