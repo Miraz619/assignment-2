@@ -48,7 +48,7 @@ const getAllIssue = async (req: Request, res: Response) => {
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Issue retrived successfully",
+      message: "Issues retrived successfully",
       data: issues,
     });
   } catch (error: unknown) {
@@ -84,7 +84,7 @@ const singleIssue = async (req: Request, res: Response) => {
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Issues retrived successfully",
+      message: "Issue retrived successfully",
       data: result,
     });
   } catch (error: unknown) {
